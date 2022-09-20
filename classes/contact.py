@@ -9,9 +9,8 @@ class Contact:
         self._birthday = birthday
         self._id_contact = id_contact
 
-'''Una vez definida la clase, agregamos los getters y setters'''
-
-    @property # Getter ID_CONTACT
+    '''Una vez definida la clase, agregamos los getters y setters'''
+    @property #Getter ID_CONTACT
     def id_contact(self):
         return self._id_contact
 
