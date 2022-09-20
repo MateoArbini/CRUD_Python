@@ -1,5 +1,7 @@
 #!/usr/bin/python3
 
+import csv
+
 class DBbyCSV:
     def __init__(self, schema, filename):
         self._filename = f'./{filename}.csv'
