@@ -4,7 +4,7 @@ Objetivo - Crear una agenda en donde el usuario pueda guardar contactos, listarl
 
 Funcionamiento - Este CRUD se ejecutara sobre la linea de comandos.
 
-Tecnologias - Python/Pip/PrettyTable(Libreria utilizada para mostrar de mejor manera los datos)
+Tecnologias - Python/Pip/PrettyTable/re/shutil/tempfile/time
 
 Link web: https://cosasdedevs.com/posts/como-crear-un-crud-en-python-parte-1-estructura-y-clase/
 
