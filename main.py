@@ -40,12 +40,12 @@ def run():
     elif command == 'L':
         list_contacts() #Si la letra es L, se ejecuta la siguiente funcion
     elif command == 'M':
-        pass
+        update_contact() #Si la letra es la M, se ejecuta la siguiente funcion
     elif command == 'E':
-        pass
+        delete_contact() #Si la letra es la E, se ejecuta la siguiente funcion
     elif command == 'B':
-        pass
-    elif command == 'S': # Ejecuta la accion SALIR y se vuelve a la consola.
+        search_contact()# Ejecuta la accion SALIR y se vuelve a la consola.
+    elif command == 'S':
         os._exit(1)
     else:
         print('Comando inválido') # Si no coincide ninguna letra, el comando ingresado por el usuario no es valido
@@ -68,10 +68,13 @@ def create_contact():
     else: #En caso de que no se haya podido guardar mediante la funcion
         print('Error al guardar el contacto')
 
-def check_contact_data(message, data_name):
-    '''Para esta funcion estamos pasando el mensaje que queremos mostrar al usuario y el nombre del campo'''
+def check_contact_data(message, data_name, force = True):
+    '''Para esta funcion estamos pasando el mensaje que queremos mostrar al usuario y el nombre del campo. El parametro force, que contiene como valor por
+    default True, lo usaremos para los casos en los que el imput venga vacio y que no realice ninguna validacion.'''
     print(message)
     input_data = input()
+    if not force and not input_data:
+        return
     try:
         getattr(validator, f'validate{data_name.capitalize()}')(input_data)
         return input_data # En este return, lo que estamos haciendo es enviar el dato a validar al validador.
@@ -99,6 +102,102 @@ def list_contacts():
     print(table) #Printeamos la tabla
     print('Pulsa intro para salir') #Detenemos la finalizacion de la funcion cuando el usuario presiona Enter.
     command = input()
+
+def search_contact():
+    '''En esta funcion, le estamos pidiendo al usuario que introduzca un nombre, apellido o email. Si los datos introducidos por el usuario no
+    estan vacios, se guardaran en el diccionario filters y se realizara la busqueda llamando a la funcion search_contacts, si encuentra estos
+    resultados, mostrara una tabla como cuando listamos todos los contactos.'''
+    filters = {}
+    print('Introduce un nombre (vacío para usar otro filtro):')
+    nombre = input() #Pide un nombre al usuario
+    if nombre: #Corrobora si le paso algo
+        filters['NAME'] = nombre #Lo agrega al diccionario
+    print('Introduce un apellido (vacío para usar otro filtro):')
+    apellidos = input() #Pide un apellido al usuario
+    if apellidos: #Corrobora si le paso algo
+        filters['SURNAME'] = apellidos #Lo agrega al diccionario
+    print('Introduce un email (vacío para usar otro filtro):')
+    email = input() #Pide un mail al usuario
+    if email: #Corrobora si le paso
+        filters['EMAIL'] = email #Lo agrega al diccionario
+
+    try:
+        list_contacts = db.search_contacts(filters)
+        if not list_contacts:
+            return print('No hay ningún contacto con esos criterios de búsqueda')
+
+        _print_table_contacts(list_contacts)
+    except ValueError as err:
+        print(err)
+        time.sleep(1)
+        search_contact()
+
+def _print_table_contacts(list_contacts):
+    '''En caso de que exista un contacto que coincida con los criterios de busqueda, lo imprime'''
+    table = PrettyTable(db.get_schema().keys())
+    for contact in list_contacts:
+        table.add_row([
+            contact.id_contact,
+            contact.name,
+            contact.surname,
+            contact.email,
+            contact.phone,
+            contact.birthday
+        ])
+
+    print(table)
+    print('Pulsa cualquier letra para continuar')
+    command = input()
+
+def update_contact():
+    '''Funcion que primero, mostrara la lista de contactos, despues solicitamos el id del contacto que queremos actualizar, y validamos los datos
+    que introduzca el usuario con check_contact_data. Si todo ha ido bien, llamamos  db.update y actualizmaos el usario, si no lanzara una excepcion
+    y reintentara el proceso'''
+    list_contacts()
+    print('Introduce el id del contacto que quieres actualizar:')
+    id_object = input()
+    data = {}
+
+    nombre = check_contact_data('Introduce un nombre (vacío para mantener el nombre actual):', 'name', False)
+    if nombre:
+        data['NAME'] = nombre
+    apellidos = check_contact_data('Introduce un apellido (vacío para mantener los apellidos actuales):', 'surname', False)
+    if apellidos:
+        data['SURNAME'] = apellidos
+    email = check_contact_data('Introduce un email (vacío para mantener el email actual):', 'email', False)
+    if email:
+        data['EMAIL'] = email
+    phone = check_contact_data('Introduce un teléfono (vacío para mantener el teléfono actual):', 'phone', False)
+    if phone:
+        data['PHONE'] = phone
+    birthday = check_contact_data('Introduce una fecha de nacimiento YYYY-MM-DD (vacío para mantener la fecha actual):', 'birthday', False)
+    if birthday:
+        data['BIRTHDAY'] = birthday
+    
+    try:
+        res = db.update(id_object, data)
+        if res:
+            print('Contacto actualizado con éxito')
+    except Exception as err:
+        print(err)
+        time.sleep(1)
+        update_contact()
+
+def delete_contact():
+    '''Funcion que lo que hara sera mostrar el listado de contactos y le pediremos un id de contacto al usuario, si lo encontramos,
+    lo eliminara, sino, mostrara un mensaje de error y llamara de nuevo a la funcion delete_contact'''
+    list_contacts()
+
+    print('Introduce el id del contacto que quieres eliminar:')
+    id_object = input()
+    try:
+        res = db.delete(id_object)
+        if res:
+            print('Contacto eliminado con éxito')
+    except Exception as err:
+        print(err)
+        time.sleep(1)
+        delete_contact()
 
 if __name__ == "__main__": # Al utilizar esto, le decimos al interprete que lo que hay que ejecutar cuando se ejecuta el main
     run()                  # es la funcion run().
